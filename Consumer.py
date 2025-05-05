@@ -27,11 +27,11 @@ def callback(ch, method, properties, body):
     Esta función se ejecuta cada vez que llega un nuevo mensaje desde RabbitMQ.
     """
     try:
-        # Convertir el cuerpo del mensaje desde JSON a diccionario
+        # Se convierte el cuerpo del mensaje desde JSON a diccionario
         data = json.loads(body)
         print("Mensaje recibido:", data)
 
-        # Incrementar métrica de mensajes recibidos
+        # Se incrementa métrica de mensajes recibidos
         messages_received_total.inc()
 
         # Conexión a PostgreSQL
@@ -43,7 +43,7 @@ def callback(ch, method, properties, body):
         )
         cur = conn.cursor()
 
-        # Insertar los datos en la tabla weather_logs
+        # Se insertar los datos en la tabla weather_logs
         cur.execute(
             """
             INSERT INTO weather_logs (station_id, temperature, humidity, timestamp)
@@ -54,18 +54,18 @@ def callback(ch, method, properties, body):
         cur.close()
         conn.close()
 
-        # Incrementar métrica de mensajes guardados
+        # Se incrementa métrica de mensajes guardados
         messages_saved_total.inc()
 
         # Confirmar a RabbitMQ que el mensaje fue procesado correctamente
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     except Exception as e:
-        # Si ocurre un error, mostrar el traceback completo
+        # Si ocurre un error, se mouestra el traceback completo
         print("Error procesando mensaje:")
         traceback.print_exc()
 
-        # Incrementar métrica de errores
+        # Se incrementa métrica de errores
         messages_failed_total.inc()
 
 # FUNCIÓN PRINCIPAL
@@ -95,24 +95,24 @@ def main():
         print("No se pudo conectar a RabbitMQ")
         return  # Sale del programa si no hay conexión
 
-    # Configurar el canal de comunicación con RabbitMQ
+    # Se configura el canal de comunicación con RabbitMQ
     channel = connection.channel()
 
-    # Declarar el exchange "weather" como fanout y durable (sobrevive reinicios)
+    # Se declara el exchange "weather" como fanout y durable (sobrevive reinicios)
     channel.exchange_declare(exchange='weather', exchange_type='fanout', durable=True)
 
-    # Crear una cola temporal y exclusiva (solo para esta instancia)
+    # Se crea una cola temporal y exclusiva (solo para esta instancia)
     result = channel.queue_declare(queue='', exclusive=True)
     queue_name = result.method.queue
 
-    # Asociar la cola al exchange
+    # Se asocia la cola al exchange
     channel.queue_bind(exchange='weather', queue=queue_name)
 
-    # Indicar que se empiece a consumir mensajes con la función callback
+    # Se indica que se empiece a consumir mensajes con la función callback
     channel.basic_consume(queue=queue_name, on_message_callback=callback)
     print("Esperando mensajes...")
 
-    # Iniciar el consumo
+    # Se inicia el consumo
     channel.start_consuming()
 
 # EJECUCIÓN DIRECTA
