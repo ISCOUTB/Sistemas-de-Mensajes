@@ -12,7 +12,7 @@ def main():
     connection = None
     for intento in range(10):  # Hasta 10 intentos de conexión
         try:
-            # Intentar conectar al servidor RabbitMQ
+            # Se intenta conectar al servidor RabbitMQ
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host='rabbitmq',  # Nombre del contenedor del broker en docker-compose
@@ -22,7 +22,7 @@ def main():
             print("Conexión a RabbitMQ establecida")
             break  # Si la conexión fue exitosa, sale del ciclo
         except pika.exceptions.AMQPConnectionError as e:
-            # Si hay un error, se imprime y esperar 5 segundos antes de reintentar
+            # Si hay un error, se imprime y se espera 5 segundos antes de reintentar
             print(f"Error de conexión ({intento + 1}/10): {e}")
             time.sleep(5)
     else:
@@ -32,15 +32,15 @@ def main():
 
     # ENVÍO DE MENSAJES CONTINUO
     try:
-        # Crear canal para enviar mensajes
+        # Se crea canal para enviar mensajes
         channel = connection.channel()
 
-        # Declarar el exchange 'weather' (fanout = se envía a todas las colas vinculadas)
+        # Se declara el exchange 'weather' (fanout = se envía a todas las colas vinculadas)
         channel.exchange_declare(exchange='weather', exchange_type='fanout', durable=True)
 
-        # Enviar mensajes en un bucle infinito (cada 5 segundos)
+        # Se envian mensajes en un bucle infinito (cada 5 segundos)
         while True:
-            # Crear un mensaje con datos simulados de estación meteorológica
+            # Se crea un mensaje con datos simulados de estación meteorológica
             message = {
                 "station_id": "ST001",
                 "temperature": 23.5,
@@ -48,7 +48,7 @@ def main():
                 "timestamp": time.time()  # Marca de tiempo actual
             }
 
-            # Publicar el mensaje al exchange 'weather'
+            # Se publica el mensaje al exchange 'weather'
             channel.basic_publish(
                 exchange='weather',       # Exchange al que se envía
                 routing_key='',           # Sin routing_key porque es fanout
@@ -58,10 +58,10 @@ def main():
                 )
             )
 
-            # Muestra el mensaje enviado en consola
+            # Se muestra el mensaje enviado en consola
             print("Mensaje enviado:", message)
 
-            # Espera 5 segundos antes de enviar el siguiente
+            # Se tiene que esperar 5 segundos antes de enviar el siguiente
             time.sleep(5)
 
     except Exception as e:
