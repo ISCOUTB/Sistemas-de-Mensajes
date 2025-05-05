@@ -89,10 +89,3 @@ Pasos para configurar:
 2. Añadir data source → Prometheus → URL: `http://prometheus:9090`
 3. Importar el dashboard desde `dashboards/consumer-dashboard.json`
 
-## Dashboards
-
-El dashboard incluido visualiza las métricas principales del sistema. Para importarlo:
-
-1. Ir a *Dashboards* → *Import* → *Upload JSON file*
-2. Seleccionar `dashboards/consumer-dashboard.json`
-3. Asociar a la fuente de datos `Prometheus`
