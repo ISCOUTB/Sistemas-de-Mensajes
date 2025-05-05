@@ -12,8 +12,5 @@ RUN pip install pika psycopg2-binary prometheus_client
 # - psycopg2-binary: para conectarse a PostgreSQL
 # - prometheus_client: para exponer métricas a Prometheus
 
-EXPOSE 8000  
-# Expone el puerto 8000 para que Prometheus pueda acceder a las métricas desde fuera del contenedor
-
-CMD ["python", "consumer.py"]  
-# Comando que se ejecuta cuando arranca el contenedor: inicia el script principal del consumidor
+EXPOSE 8000  # Expone el puerto 8000 para que Prometheus pueda acceder a las métricas desde fuera del contenedor
+CMD ["python", "consumer.py"]  # Comando que se ejecuta cuando arranca el contenedor: inicia el script principal del consumidor
