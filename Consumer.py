@@ -25,7 +25,6 @@ print("Servidor Prometheus disponible en puerto 8000")
 def callback(ch, method, properties, body):
     """
     Esta función se ejecuta cada vez que llega un nuevo mensaje desde RabbitMQ.
-    Procesa el mensaje, lo guarda en PostgreSQL y gestiona métricas y errores.
     """
     try:
         # Convertir el cuerpo del mensaje desde JSON a diccionario
@@ -48,7 +47,6 @@ def callback(ch, method, properties, body):
         cur.execute(
             """
             INSERT INTO weather_logs (station_id, temperature, humidity, timestamp)
-            VALUES (%s, %s, %s, to_timestamp(%s))
             """,
             (data['station_id'], data['temperature'], data['humidity'], data['timestamp'])
         )
