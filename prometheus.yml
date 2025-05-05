@@ -1,0 +1,11 @@
+# CONFIGURACIÓN GLOBAL
+global:
+  scrape_interval: 5s  # Intervalo global de recolección: cada 5 segundos, es decir, Prometheus revisará cada destino configurado cada 5 segundos
+
+# DEFINICIÓN DE JOBS A MONITOREAR
+scrape_configs:
+  - job_name: 'consumer'  # Nombre del job, puede ser cualquier identificador útil
+    static_configs:
+      - targets: ['consumer:8000']  # Dirección del servicio a monitorear
+                                    # 'consumer' es el nombre del contenedor (usado en Docker Compose)
+                                    # '8000' es el puerto donde el consumer expone las métricas
