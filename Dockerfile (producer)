@@ -1,0 +1,17 @@
+# Usamos una imagen oficial de Python, versión 3.13, en su variante "slim" (más liviana)
+FROM python:3.13-slim
+
+# DIRECTORIO DE TRABAJO
+# Establece la carpeta /app dentro del contenedor como directorio de trabajo
+WORKDIR /app
+
+# Copia el archivo producer.py (el productor de datos) desde la maquina al contenedor
+COPY producer.py .
+
+# Instala la librería pika, necesaria para conectar con RabbitMQ
+# Se usa pip directamente en esta capa del contenedor
+RUN pip install pika
+
+# Define el comando que se ejecuta automáticamente al iniciar el contenedor
+# En este caso, lanza el script producer.py usando Python
+CMD ["python", "producer.py"]
