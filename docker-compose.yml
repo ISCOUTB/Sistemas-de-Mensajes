@@ -1,0 +1,70 @@
+version: "3.9"  # Versión del esquema de Docker Compose
+
+services:
+  db:
+    image: postgres:15  # Imagen oficial de PostgreSQL versión 15
+    container_name: postgres  # Nombre del contenedor
+    environment:
+      POSTGRES_DB: weather_logs  # Nombre de la base de datos a crear
+      POSTGRES_USER: weather_user  # Usuario de la base de datos
+      POSTGRES_PASSWORD: weather_pass  # Contraseña del usuario
+    ports:
+      - "5432:5432"  # Expone el puerto para conexiones externas (por ejemplo, desde PgAdmin)
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Script que se ejecuta al iniciar por primera vez la base de datos
+    restart: always  # Reinicia automáticamente si el contenedor falla
+
+  rabbitmq:
+    image: rabbitmq:3-management  # Imagen con interfaz web de RabbitMQ
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # Puerto para la comunicación entre servicios (Producer/Consumer)
+      - "15672:15672"  # Puerto para acceder al panel web de RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: user  # Usuario por defecto para RabbitMQ
+      RABBITMQ_DEFAULT_PASS: password  # Contraseña para el usuario
+    restart: always
+
+  producer:
+    build:
+      context: ./producer  # Carpeta donde está el Dockerfile del producer
+    container_name: producer
+    depends_on:
+      - rabbitmq  # Se asegura de que RabbitMQ esté listo antes de iniciar
+    restart: always
+
+  consumer:
+    build:
+      context: ./consumer  # Carpeta donde está el Dockerfile del consumer
+    container_name: consumer
+    depends_on:
+      - rabbitmq  # RabbitMQ debe estar activo antes de iniciar este servicio
+      - db  # También depende de que la base de datos esté lista
+    ports:
+      - "8000:8000"  # Puerto donde se exponen las métricas Prometheus desde el consumer
+    restart: always
+
+  prometheus:
+    image: prom/prometheus  # Imagen oficial de Prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Archivo de configuración personalizado
+    ports:
+      - "9090:9090"  # Puerto web para acceder a Prometheus
+    depends_on:
+      - consumer  # No inicia hasta que el consumer esté listo
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest  # Última versión de Grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Puerto web de Grafana
+    depends_on:
+      - prometheus  # Grafana espera a que Prometheus esté funcionando
+    volumes:
+      - grafana-storage:/var/lib/grafana  # Volumen persistente para guardar dashboards y configuraciones
+    restart: always
+
+volumes:
+  grafana-storage:  # Volumen nombrado para guardar los datos de Grafana
