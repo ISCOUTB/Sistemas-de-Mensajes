@@ -1,0 +1,6 @@
+FROM python:3.13-slim 
+WORKDIR /app
+COPY consumer.py .
+RUN pip install pika psycopg2-binary prometheus_client
+EXPOSE 8000
+CMD ["python", "consumer.py"]
