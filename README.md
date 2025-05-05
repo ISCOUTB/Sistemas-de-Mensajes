@@ -8,7 +8,6 @@ Este sistema simula un flujo de datos meteorológicos usando microservicios en D
 * [Instalación](#instalación)
 * [Prometheus](#prometheus)
 * [Grafana](#grafana)
-* [Dashboards](#dashboards)
 
 ## Estructura del Proyecto
 
