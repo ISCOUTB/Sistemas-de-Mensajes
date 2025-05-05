@@ -1,6 +1,19 @@
-FROM python:3.13-slim 
-WORKDIR /app
-COPY consumer.py .
-RUN pip install pika psycopg2-binary prometheus_client
-EXPOSE 8000
-CMD ["python", "consumer.py"]
+FROM python:3.13-slim  # Imagen base ligera de Python 3.13
+# Usamos una versión 'slim' para reducir el tamaño del contenedor
+
+WORKDIR /app  # Establece el directorio de trabajo dentro del contenedor
+# Todos los comandos siguientes se ejecutarán desde aquí
+
+COPY consumer.py .  # Copia el archivo consumer.py desde tu máquina local al contenedor
+
+RUN pip install pika psycopg2-binary prometheus_client  
+# Instala las librerías necesarias:
+# - pika: para conectarse a RabbitMQ
+# - psycopg2-binary: para conectarse a PostgreSQL
+# - prometheus_client: para exponer métricas a Prometheus
+
+EXPOSE 8000  
+# Expone el puerto 8000 para que Prometheus pueda acceder a las métricas desde fuera del contenedor
+
+CMD ["python", "consumer.py"]  
+# Comando que se ejecuta cuando arranca el contenedor: inicia el script principal del consumidor
