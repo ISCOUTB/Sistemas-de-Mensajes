@@ -1,70 +1,79 @@
-version: "3.9"  # Versión del esquema de Docker Compose
-
+#la versión de Docker Compose
+version: '3.8'
 services:
-  db:
-    image: postgres:15  # Imagen oficial de PostgreSQL versión 15
-    container_name: postgres  # Nombre del contenedor
-    environment:
-      POSTGRES_DB: weather_logs  # Nombre de la base de datos a crear
-      POSTGRES_USER: weather_user  # Usuario de la base de datos
-      POSTGRES_PASSWORD: weather_pass  # Contraseña del usuario
-    ports:
-      - "5432:5432"  # Expone el puerto para conexiones externas (por ejemplo, desde PgAdmin)
-    volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Script que se ejecuta al iniciar por primera vez la base de datos
-    restart: always  # Reinicia automáticamente si el contenedor falla
-
-  rabbitmq:
-    image: rabbitmq:3-management  # Imagen con interfaz web de RabbitMQ
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"  # Puerto para la comunicación entre servicios (Producer/Consumer)
-      - "15672:15672"  # Puerto para acceder al panel web de RabbitMQ
-    environment:
-      RABBITMQ_DEFAULT_USER: user  # Usuario por defecto para RabbitMQ
-      RABBITMQ_DEFAULT_PASS: password  # Contraseña para el usuario
-    restart: always
-
+  #Servicio Producer: Productor de datos
   producer:
     build:
-      context: ./producer  # Carpeta donde está el Dockerfile del producer
-    container_name: producer
+      context: ./producer  #El directorio donde se encuentra el código para el servicio producer
+    container_name: producer  #Nombre del contenedor
     depends_on:
-      - rabbitmq  # Se asegura de que RabbitMQ esté listo antes de iniciar
-    restart: always
+      - rabbitmq  #Este servicio depende de RabbitMQ, debe estar disponible antes de arrancar, esto se activa abriendo docke
+    networks:
+      - default  #El servicio está en la red predeterminada
 
+  #Servicio Consumer: Consumidor de datos
   consumer:
     build:
-      context: ./consumer  # Carpeta donde está el Dockerfile del consumer
-    container_name: consumer
+      context: ./consumer  #El directorio donde se encuentra el código para el servicio consumer
+    container_name: consumer  #Nombre del contenedor
     depends_on:
-      - rabbitmq  # RabbitMQ debe estar activo antes de iniciar este servicio
-      - db  # También depende de que la base de datos esté lista
+      - rabbitmq  #Este servicio depende de RabbitMQ
+      - db  #También depende de la base de datos (db)
     ports:
-      - "8000:8000"  # Puerto donde se exponen las métricas Prometheus desde el consumer
-    restart: always
+      - "8000:8000"  #Exponer puerto 8000 para métricas o comunicación con el servicio
+    restart: always  #Configura el reinicio automático del servicio si se detiene
+    networks:
+      - default  #El servicio está en la red predeterminada
 
+  #Servicio DB: Base de datos PostgreSQL
+  db:
+    image: postgres:15  #Usamos la imagen oficial de PostgreSQL versión 15
+    container_name: db  #Nombre del contenedor
+    environment:
+      POSTGRES_DB: weather_logs  #Nombre de la base de datos
+      POSTGRES_USER: weather_user  #Usuario para acceder a la base de datos
+      POSTGRES_PASSWORD: weather_pass  #Contraseña para el usuario de la base de datos
+    ports:
+      - "5432:5432"  #Exponer puerto 5432 para conexión con la base de datos
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  #Ejecuta el archivo init.sql al iniciar el contenedor
+    networks:
+      - default  #El servicio está en la red predeterminada
+
+  #Servicio RabbitMQ: Servidor de mensajería
+  rabbitmq:
+    image: rabbitmq:3-management  #Usamos la imagen oficial de RabbitMQ con la interfaz de gestión
+    container_name: rabbitmq  #Nombre del contenedor
+    ports:
+      - "5672:5672"  #Puerto para la comunicación de mensajería
+      - "15672:15672"  #Puerto para acceder a la interfaz de gestión de RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: user  #Usuario predeterminado
+      RABBITMQ_DEFAULT_PASS: password  #Contraseña predeterminada
+    networks:
+      - default  #El servicio está en la red predeterminada
+
+  #Servicio Prometheus: Sistema de monitoreo de métricas
   prometheus:
-    image: prom/prometheus  # Imagen oficial de Prometheus
-    container_name: prometheus
+    image: prom/prometheus  #Usamos la imagen oficial de Prometheus
+    container_name: prometheus  #Nombre del contenedor
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Archivo de configuración personalizado
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  #Monta el archivo de configuración de Prometheus
     ports:
-      - "9090:9090"  # Puerto web para acceder a Prometheus
-    depends_on:
-      - consumer  # No inicia hasta que el consumer esté listo
-    restart: always
+      - "9090:9090"  #Puerto para acceder a la interfaz web de Prometheus
+    networks:
+      - default  #El servicio está en la red predeterminada
 
+  #Servicio Grafana: Plataforma de visualización de métricas
   grafana:
-    image: grafana/grafana:latest  # Última versión de Grafana
-    container_name: grafana
+    image: grafana/grafana  #Usamos la imagen oficial de Grafana
+    container_name: grafana  #Nombre del contenedor
     ports:
-      - "3000:3000"  # Puerto web de Grafana
-    depends_on:
-      - prometheus  # Grafana espera a que Prometheus esté funcionando
-    volumes:
-      - grafana-storage:/var/lib/grafana  # Volumen persistente para guardar dashboards y configuraciones
-    restart: always
+      - "3000:3000"  #Puerto para acceder a la interfaz web de Grafana
+    networks:
+      - default  #El servicio está en la red predeterminada
 
-volumes:
-  grafana-storage:  # Volumen nombrado para guardar los datos de Grafana
+#Definición de redes, en este caso usamos la red predeterminada que Docker proporciona.
+networks:
+  default:
+    driver: bridge  #Usa el controlador bridge para la red predeterminada
